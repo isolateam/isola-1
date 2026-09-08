@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!--<link rel="icon" href="./data/images/favicon-transparent.png" />
+    <link rel="shortcut icon" href="./data/images/favicon-transparent.png" />-->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <title>something called isola</title>
+    <style>
+        @font-face {
+            font-family: 'FONT2';
+            src: url('./data/fonts/AlteHaasGroteskRegular.ttf');
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg: #101114;
+            --surface: #17181c;
+            --surface-raised: #1c1d22;
+            --text-primary: #ececee;
+            --text-secondary: #9296a0;
+            --accent: #5b7fdb;
+            --accent-soft: rgba(91, 127, 219, 0.14);
+            --border: rgba(255, 255, 255, 0.09);
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Inter', 'FONT2', sans-serif;
+            background: var(--bg);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+            transition: background 0.3s ease, color 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(16px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        a { color: inherit; }
+
+        #bg-canvas {
+            position: fixed;
+            inset: 0;
+            z-index: -1;
+            display: block;
+        }
+
+        /* ---------- Nav ---------- */
+
+        .top-nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            padding: 22px 40px;
+            background: rgba(16, 17, 20, 0.7);
+            backdrop-filter: blur(14px);
+            border-bottom: 1px solid var(--border);
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        .nav-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        .logo {
+            font-size: 18px;
+            font-weight: 600;
+            letter-spacing: 0.3px;
+            text-decoration: none;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            text-decoration: none;
+            color: var(--text-secondary);
+            font-size: 14px;
+            font-weight: 500;
+            transition: border-color 0.2s ease, color 0.2s ease;
+        }
+
+        .nav-item:hover {
+            border-color: var(--accent);
+            color: var(--text-primary);
+        }
+
+        .nav-item img {
+            width: 15px;
+            height: 15px;
+            filter: invert(100%);
+            opacity: 0.8;
+        }
+
+        /* ---------- Hero ---------- */
+
+        .main-content {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 140px 24px 60px;
+            text-align: center;
+        }
+
+        .hero-section {
+            animation: fadeIn 0.7s ease-out 0.1s both;
+            max-width: 640px;
+        }
+
+        .main-title {
+            font-size: clamp(48px, 9vw, 104px);
+            font-weight: 600;
+            letter-spacing: -2px;
+            line-height: 1;
+            margin-bottom: 18px;
+        }
+
+        .title-brea {
+            color: var(--text-primary);
+        }
+
+        .title-kium {
+            color: var(--accent);
+        }
+
+        .subtitle {
+            font-size: 17px;
+            color: var(--text-secondary);
+            font-weight: 400;
+        }
+
+        /* ---------- Feature cards (kept for future use) ---------- */
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 20px;
+            max-width: 960px;
+            width: 100%;
+            margin-top: 64px;
+        }
+
+        .feature-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 28px;
+            text-align: left;
+            transition: border-color 0.2s ease, transform 0.2s ease;
+        }
+
+        .feature-card:hover {
+            border-color: var(--accent);
+            transform: translateY(-3px);
+        }
+
+        .feature-icon {
+            width: 40px;
+            height: 40px;
+            margin-bottom: 16px;
+            background: var(--accent-soft);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .feature-icon img {
+            width: 20px;
+            height: 20px;
+            filter: invert(100%);
+        }
+
+        .feature-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 6px;
+            color: var(--text-primary);
+        }
+
+        .feature-description {
+            font-size: 14px;
+            color: var(--text-secondary);
+            line-height: 1.5;
+        }
+
+        /* ---------- Chatbot widget ---------- */
+
+        #chatbot-container {
+            position: fixed;
+            bottom: 28px;
+            right: 28px;
+            width: 320px;
+            max-height: 480px;
+            background: var(--surface-raised);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 18px;
+            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
+            z-index: 1001;
+            animation: fadeIn 0.6s ease-out 0.2s both;
+        }
+
+        #chatbot-container h3 {
+            text-align: left;
+            color: var(--text-primary);
+            margin-bottom: 14px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        #chatlog {
+            max-height: 320px;
+            overflow-y: auto;
+            color: var(--text-secondary);
+            font-size: 13px;
+            line-height: 1.5;
+            margin-bottom: 14px;
+            padding-right: 6px;
+        }
+
+        #chatlog::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        #chatlog::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        #chatlog::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 2px;
+        }
+
+        .chat-input-container {
+            display: flex;
+            gap: 8px;
+        }
+
+        #userInput {
+            flex: 1;
+            padding: 9px 14px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background: var(--surface);
+            color: var(--text-primary);
+            font-size: 13px;
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+
+        #userInput:focus {
+            border-color: var(--accent);
+        }
+
+        .send-button {
+            padding: 9px 16px;
+            background: var(--accent);
+            color: #ffffff;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            transition: filter 0.2s ease;
+        }
+
+        .send-button:hover {
+            filter: brightness(1.1);
+        }
+
+        /* ---------- Discord link ---------- */
+
+        .discord-link {
+            position: fixed;
+            bottom: 28px;
+            left: 28px;
+            width: 44px;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--surface-raised);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            transition: border-color 0.2s ease, transform 0.2s ease;
+            z-index: 1000;
+        }
+
+        .discord-link:hover {
+            border-color: var(--accent);
+            transform: translateY(-2px);
+        }
+
+        .discord-link img {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* ---------- Responsive ---------- */
+
+        @media (max-width: 768px) {
+            .top-nav {
+                padding: 16px 20px;
+            }
+
+            .main-content {
+                padding: 110px 20px 40px;
+            }
+
+            .features-grid {
+                grid-template-columns: 1fr;
+                gap: 16px;
+                margin-top: 44px;
+            }
+
+            #chatbot-container {
+                right: 16px;
+                bottom: 16px;
+                width: calc(100vw - 32px);
+                max-width: 300px;
+            }
+
+            .discord-link {
+                left: 16px;
+                bottom: 16px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .nav-item span {
+                display: none;
+            }
+
+            .nav-item {
+                padding: 8px 10px;
+            }
+        }
+
+        /* ---------- Theme variants (toggled via JS) ---------- */
+
+        body.light-theme {
+            --bg: #f6f5f2;
+            --surface: #ffffff;
+            --surface-raised: #ffffff;
+            --text-primary: #181818;
+            --text-secondary: #5d5f66;
+            --accent: #33529e;
+            --accent-soft: rgba(51, 82, 158, 0.1);
+            --border: rgba(0, 0, 0, 0.1);
+        }
+
+        body.light-theme .top-nav {
+            background: rgba(246, 245, 242, 0.75);
+        }
+
+        body.light-theme .nav-item img,
+        body.light-theme .feature-icon img {
+            filter: invert(0%);
+        }
+
+        body.red-theme {
+            --bg: #1b1112;
+            --surface: #241416;
+            --surface-raised: #2a1718;
+            --text-primary: #f1e9e7;
+            --text-secondary: #b79792;
+            --accent: #c1554a;
+            --accent-soft: rgba(193, 85, 74, 0.16);
+            --border: rgba(255, 255, 255, 0.09);
+        }
+
+        body.red-theme .top-nav {
+            background: rgba(27, 17, 18, 0.75);
+        }
+    </style>
+</head>
+<body>
+    <canvas id="bg-canvas"></canvas>
+
+    <nav class="top-nav">
+        <div class="nav-container">
+            <a href="/" class="logo">isola</a>
+            <div class="nav-links">
+                <a href="/null" class="nav-item">
+                    <img src="/data/images/svg/search.svg" alt="Search">
+                    <span>Search</span>
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="main-content">
+        <div class="hero-section">
+            <h1 class="main-title">
+                <span class="title-brea">iso</span><span class="title-kium">la</span>
+            </h1>
+            <p class="subtitle">have fun</p>
+        </div>
+    </main>
+
+    <a href="https://discord.gg/s4gXM6XUgH" target="_blank" class="discord-link">
+        <img src="/data/images/discord-2-xxl.png" alt="Discord">
+    </a>
+
+    <script type="text/javascript">
+        (function(c,l,a,r,i,t,y){
+            c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+            t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
+            y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+        })(window, document, "clarity", "script", "pbldbrga67");
+    </script>
+
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5699449194421450"
+     crossorigin="anonymous"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter' && e.target.id === 'userInput') {
+                    sendMessage();
+                }
+            });
+        });
+    </script>
+
+    <script>
+        (function() {
+            const canvas = document.getElementById('bg-canvas');
+            const ctx = canvas.getContext('2d');
+            const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+            let width, height, dpr;
+            let particles = [];
+            const mouse = { x: null, y: null };
+            let accentRgb = [91, 127, 219];
+
+            function hexToRgb(hex) {
+                const clean = hex.trim().replace('#', '');
+                const parts = clean.match(/.{1,2}/g);
+                if (!parts || parts.length < 3) return accentRgb;
+                return parts.slice(0, 3).map(h => parseInt(h, 16));
+            }
+
+            function readAccent() {
+                const value = getComputedStyle(document.body).getPropertyValue('--accent');
+                if (value) accentRgb = hexToRgb(value);
+            }
+
+            function resize() {
+                dpr = window.devicePixelRatio || 1;
+                width = window.innerWidth;
+                height = window.innerHeight;
+                canvas.width = width * dpr;
+                canvas.height = height * dpr;
+                canvas.style.width = width + 'px';
+                canvas.style.height = height + 'px';
+                ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+                const count = Math.min(Math.round((width * height) / 16000), 90);
+                particles = Array.from({ length: count }, () => ({
+                    x: Math.random() * width,
+                    y: Math.random() * height,
+                    vx: (Math.random() - 0.5) * 0.25,
+                    vy: (Math.random() - 0.5) * 0.25,
+                    r: Math.random() * 1.3 + 0.6
+                }));
+            }
+
+            function frame() {
+                readAccent();
+                const [r, g, b] = accentRgb;
+                ctx.clearRect(0, 0, width, height);
+
+                for (const p of particles) {
+                    p.x += p.vx;
+                    p.y += p.vy;
+
+                    if (mouse.x !== null) {
+                        const dx = p.x - mouse.x;
+                        const dy = p.y - mouse.y;
+                        const dist = Math.hypot(dx, dy);
+                        if (dist < 120 && dist > 0.01) {
+                            const force = (120 - dist) / 120;
+                            p.x += (dx / dist) * force * 1.6;
+                            p.y += (dy / dist) * force * 1.6;
+                        }
+                    }
+
+                    if (p.x < -10) p.x = width + 10;
+                    if (p.x > width + 10) p.x = -10;
+                    if (p.y < -10) p.y = height + 10;
+                    if (p.y > height + 10) p.y = -10;
+                }
+
+                for (let i = 0; i < particles.length; i++) {
+                    for (let j = i + 1; j < particles.length; j++) {
+                        const a = particles[i], p2 = particles[j];
+                        const dist = Math.hypot(a.x - p2.x, a.y - p2.y);
+                        if (dist < 130) {
+                            ctx.strokeStyle = `rgba(${r},${g},${b},${0.1 * (1 - dist / 130)})`;
+                            ctx.lineWidth = 1;
+                            ctx.beginPath();
+                            ctx.moveTo(a.x, a.y);
+                            ctx.lineTo(p2.x, p2.y);
+                            ctx.stroke();
+                        }
+                    }
+                }
+
+                for (const p of particles) {
+                    ctx.fillStyle = `rgba(${r},${g},${b},0.4)`;
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+
+                if (!reduceMotion) requestAnimationFrame(frame);
+            }
+
+            function handlePointer(e) {
+                const point = e.touches ? e.touches[0] : e;
+                mouse.x = point.clientX;
+                mouse.y = point.clientY;
+            }
+
+            window.addEventListener('resize', resize);
+            window.addEventListener('mousemove', handlePointer);
+            window.addEventListener('touchmove', handlePointer, { passive: true });
+            window.addEventListener('mouseleave', function() {
+                mouse.x = null;
+                mouse.y = null;
+            });
+
+            resize();
+            frame();
+        })();
+    </script>
+</body>
+</html>

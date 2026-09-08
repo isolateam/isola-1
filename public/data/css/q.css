@@ -1,0 +1,454 @@
+@font-face {
+  font-family: "FONT2";
+  src: url("/data/fonts/AlteHaasGroteskRegular.ttf");
+}
+
+:root {
+  --bg: #101114;
+  --surface: #17181c;
+  --surface-raised: #1c1d22;
+  --text-primary: #ececee;
+  --text-secondary: #9296a0;
+  --accent: #5b7fdb;
+  --border: rgba(255, 255, 255, 0.1);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+#fram {
+  width: 100vw;
+  height: 100vh;
+  z-index: 1;
+  border: none;
+  position: relative;
+}
+
+body {
+  top: 50%;
+  font-family: "FONT2", sans-serif;
+  background: url("/data/images/loading.gif") no-repeat;
+  background-color: var(--bg);
+  transition: 0.5s;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* ---------- Toolbar ---------- */
+
+.top-spot {
+  display: flex;
+  width: auto;
+  height: 2.5vh;
+  min-height: 46px;
+  border-radius: 14px;
+  padding: 8px 14px;
+  position: fixed;
+  backdrop-filter: blur(16px);
+  top: 3vh;
+  z-index: 10000;
+  left: 50%;
+  background: rgba(23, 24, 28, 0.75);
+  border: 1px solid var(--border);
+  text-align: center;
+  align-content: space-evenly;
+  align-items: center;
+  gap: 4px;
+  transform: translate(-50%, -3vh);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4);
+  transition: height 0.3s ease, opacity 0.3s ease;
+}
+
+.top-spot-enclosure {
+  text-align: center;
+  position: relative;
+  left: 0;
+  transform: none;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* ---------- Search bar ---------- */
+
+.slashapp {
+  align-items: center;
+  text-align: center;
+  margin-bottom: 0;
+  position: relative;
+}
+
+.slashapp_ {
+  font-family: "FONT2", sans-serif;
+  font-size: 14px;
+  border: 1px solid var(--border);
+  background-color: var(--surface);
+  color: var(--text-primary);
+  padding: 0.6rem 1rem;
+  border-radius: 10px;
+  width: 46vw;
+  min-width: 260px;
+  max-width: 620px;
+  height: 38px;
+  opacity: 1;
+  text-align: left;
+  letter-spacing: 0.2px;
+  z-index: 10001;
+  position: relative;
+  transition: border-color 0.2s ease, background-color 0.2s ease;
+}
+
+.slashapp_::placeholder {
+  color: var(--text-secondary);
+}
+
+.slashapp_:focus {
+  outline: none;
+  border-color: var(--accent);
+  background-color: var(--surface-raised);
+}
+
+#customCloakinput {
+  display: none;
+}
+
+/* ---------- Suggestions dropdown ---------- */
+
+#suggestions-box {
+  position: absolute;
+  top: 44px;
+  left: 0;
+  width: 100%;
+  max-width: 620px;
+  min-width: 260px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface-raised);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.35);
+  z-index: 10003;
+  display: none;
+  overflow: hidden;
+}
+
+.suggestion-item {
+  padding: 10px 14px;
+  cursor: pointer;
+  z-index: 99999;
+  font-size: 13px;
+  color: var(--text-secondary);
+  border-bottom: 1px solid var(--border);
+  background-color: transparent;
+  text-align: left;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.suggestion-item:last-child {
+  border-bottom: none;
+}
+
+.suggestion-item:hover {
+  background: var(--accent);
+  color: #ffffff;
+}
+
+/* ---------- Toolbar icon buttons ---------- */
+
+.buttin {
+  height: 26px;
+  width: 26px;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: background-color 0.2s ease, transform 0.15s ease;
+  padding: 6px;
+  border-radius: 8px;
+}
+
+.buttin:hover {
+  background-color: rgba(255, 255, 255, 0.08);
+  transform: translateY(-1px);
+}
+
+.buttin img {
+  width: 18px;
+  display: block;
+  height: auto;
+  transition: filter 0.2s ease;
+  margin: 0;
+}
+
+.buttin #svgg {
+  filter: invert(100%) sepia(4%) saturate(100%) hue-rotate(293deg)
+    brightness(107%) contrast(104%);
+  opacity: 0.85;
+}
+
+.buttin p {
+  vertical-align: top;
+  display: inline-flex;
+  will-change: auto;
+  margin: 0;
+  margin-right: 1px;
+}
+
+#toggleTopBar {
+  margin-left: 4px;
+}
+
+#toggleTopBar img {
+  width: 20px;
+  opacity: 0.7;
+}
+
+/* ---------- Dropdown menu ---------- */
+
+.dropdown {
+  position: absolute;
+  display: none;
+}
+
+.dropdown-content {
+  display: none;
+  position: absolute;
+  background-color: var(--surface-raised);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  min-width: 160px;
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.4);
+  padding: 8px;
+  z-index: 10000;
+  top: 100%;
+  left: 0;
+  color: var(--text-primary);
+  font-size: 13px;
+}
+
+.dropdown-content p {
+  padding: 8px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.dropdown-content p:hover {
+  background-color: rgba(255, 255, 255, 0.08);
+}
+
+.dropdown-content.active {
+  display: block;
+  animation: fadeIn 0.2s ease;
+}
+
+/* ---------- Bookmarks ---------- */
+
+#bookmark-name {
+  vertical-align: middle;
+  font-family: "FONT2";
+  font-size: 13px;
+  border-radius: 8px;
+  height: 30px;
+  margin-top: 0;
+  padding: 0 10px;
+  text-align: left;
+  align-items: center;
+  display: none;
+  border: 1px solid var(--border);
+  background-color: var(--surface);
+  color: var(--text-primary);
+}
+
+#bookmark-name:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+#add-bookmark {
+  margin-top: 0;
+  font-size: 16px;
+  width: 30px;
+  height: 30px;
+  margin-left: 5px;
+  margin-right: 8px;
+  text-align: center;
+  vertical-align: middle;
+  font-family: "FONT2";
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background-color: var(--surface);
+  color: var(--text-primary);
+  cursor: pointer;
+  display: none;
+  transition: border-color 0.2s ease, background-color 0.2s ease;
+}
+
+#add-bookmark:hover {
+  border-color: var(--accent);
+  background-color: var(--surface-raised);
+}
+
+#bookmark-list {
+  display: flex;
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+  gap: 8px;
+}
+
+#bookmark-list li {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  color: var(--text-primary);
+  padding: 5px 12px;
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  cursor: pointer;
+  height: 30px;
+  font-size: 13px;
+  transition: border-color 0.2s ease, background-color 0.2s ease;
+}
+
+#bookmark-list li:hover {
+  border-color: var(--accent);
+  background-color: var(--surface-raised);
+}
+
+#bookmark-list li button {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  margin-left: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1;
+}
+
+#bookmark-list li button:hover {
+  color: var(--text-primary);
+}
+
+/* ---------- Search history ---------- */
+
+#search-history-button {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  margin-left: 10px;
+  cursor: pointer;
+  height: 30px;
+  padding: 0 12px;
+  background-color: var(--accent);
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  transition: filter 0.2s ease;
+  font-family: "FONT2", sans-serif;
+  font-size: 13px;
+}
+
+#search-history-button:hover {
+  filter: brightness(1.1);
+}
+
+#search-history-container {
+  display: none;
+  position: fixed;
+  top: 10vh;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: var(--surface-raised);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 14px;
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.4);
+  z-index: 10000;
+  max-width: 300px;
+  color: var(--text-primary);
+}
+
+#search-history-container h4 {
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: var(--text-secondary);
+}
+
+#search-history-list {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+}
+
+#search-history-list li {
+  padding: 8px 6px;
+  font-size: 13px;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+}
+
+#search-history-list li:last-child {
+  border-bottom: none;
+}
+
+#search-history-list li:hover {
+  color: var(--accent);
+}
+
+#clear-history-btn {
+  margin-top: 10px;
+  width: 100%;
+  padding: 8px;
+  background-color: var(--surface);
+  color: var(--text-secondary);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  cursor: pointer;
+  font-family: "FONT2", sans-serif;
+  font-size: 12px;
+  transition: border-color 0.2s ease, color 0.2s ease;
+}
+
+#clear-history-btn:hover {
+  border-color: var(--accent);
+  color: var(--text-primary);
+}
+
+/* ---------- Theme variants ---------- */
+
+body.light-theme {
+  background-color: #f6f5f2;
+  color: #181818;
+}
+
+body.dark-theme {
+  background-color: #101114;
+  color: #ececee;
+}
+
+body.red-theme {
+  background-color: #1b1112;
+  color: #f1e9e7;
+}
+
+/* ---------- Animation ---------- */
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+/* --crashout-- */

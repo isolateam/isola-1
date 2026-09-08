@@ -1,0 +1,1377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta name="title" content="isola">
+    <meta name="description" content="67 world">
+
+    <link rel="stylesheet" href="./data/css/q.css">
+
+    <title>its isola, its free</title>
+
+    <!-- UV -->
+    <script src="/uv/uv.bundle.js"></script>
+    <script src="/uv/uv.config.js"></script>
+    <script src="/baremux/index.js"></script>
+
+    <script>
+    const bareMuxConnection = new BareMux.BareMuxConnection("/baremux/worker.js");
+
+    async function setupProxy() {
+        await bareMuxConnection.setTransport("/epoxy/index.mjs", [{
+            wisp: `${location.protocol === "https:" ? "wss:" : "ws:"}//${location.host}/wisp/`
+        }]);
+
+        const registration = await navigator.serviceWorker.register("/uv/sw.js", {
+            scope: "/"
+        });
+
+        await navigator.serviceWorker.ready;
+        console.log("Proxy ready");
+    }
+
+    setupProxy().catch(console.error);
+    </script>
+
+    <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+        }
+
+        body {
+            display: flex;
+            flex-direction: column;
+            background: #1b1c1f;
+        }
+
+        #tab-bar {
+            width: 100%;
+            height: 40px;
+            display: flex;
+            align-items: flex-end;
+            overflow-x: auto;
+            overflow-y: hidden;
+            gap: 4px;
+            padding: 6px 8px 0 8px;
+            box-sizing: border-box;
+            background: #141517;
+            flex-shrink: 0;
+        }
+
+        #tab-bar::-webkit-scrollbar {
+            height: 3px;
+        }
+
+        #tab-bar::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 3px;
+        }
+
+        .browser-tab {
+            height: 32px;
+            min-width: 160px;
+            max-width: 220px;
+            display: flex;
+            align-items: center;
+            padding: 0 6px 0 12px;
+            box-sizing: border-box;
+            border-radius: 9px 9px 0 0;
+            cursor: pointer;
+            user-select: none;
+            flex-shrink: 0;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid transparent;
+            border-bottom: none;
+            transition: background 0.15s ease, transform 0.1s ease;
+            position: relative;
+        }
+
+        .browser-tab:hover {
+            background: rgba(255, 255, 255, 0.09);
+        }
+
+        .browser-tab.active {
+            background: #24262b;
+            border-color: rgba(255, 255, 255, 0.08);
+        }
+
+        .browser-tab.active::after {
+            content: "";
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: -1px;
+            height: 2px;
+            background: #7aa2ff;
+            border-radius: 2px;
+        }
+
+        .browser-tab-favicon {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #7aa2ff;
+            margin-right: 8px;
+            flex-shrink: 0;
+            opacity: 0.85;
+        }
+
+        .browser-tab-title {
+            flex: 1;
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+            font-size: 12.5px;
+            color: rgba(255, 255, 255, 0.85);
+            font-family: system-ui, -apple-system, sans-serif;
+        }
+
+        .browser-tab.active .browser-tab-title {
+            color: #fff;
+        }
+
+        .browser-tab-close {
+            width: 20px;
+            height: 20px;
+            border: 0;
+            background: transparent;
+            color: rgba(255, 255, 255, 0.6);
+            cursor: pointer;
+            border-radius: 5px;
+            font-size: 15px;
+            line-height: 1;
+            padding: 0;
+            margin-left: 4px;
+            flex-shrink: 0;
+        }
+
+        .browser-tab-close:hover {
+            background: rgba(255, 255, 255, 0.15);
+            color: #fff;
+        }
+
+        #new-tab {
+            width: 30px;
+            height: 30px;
+            flex-shrink: 0;
+            border: 0;
+            background: transparent;
+            color: rgba(255, 255, 255, 0.7);
+            cursor: pointer;
+            border-radius: 8px;
+            font-size: 18px;
+            margin-bottom: 2px;
+            transition: background 0.15s ease;
+        }
+
+        #new-tab:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+        }
+
+        .top-spot {
+            position: static !important;
+            top: auto !important;
+            left: auto !important;
+            right: auto !important;
+            transform: none !important;
+            width: 100% !important;
+            height: auto !important;
+            min-height: 0 !important;
+            max-height: none !important;
+            margin: 0 !important;
+            border-radius: 0 !important;
+            overflow: visible !important;
+            flex-shrink: 0;
+            background: #141517;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+            box-shadow: none !important;
+            backdrop-filter: none !important;
+            z-index: 1;
+        }
+
+        .top-spot-enclosure {
+            position: relative !important;
+            transform: none !important;
+            text-align: left !important;
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            padding: 8px 10px;
+            gap: 6px;
+            width: 100% !important;
+            overflow: visible !important;
+        }
+
+        #tab-bar {
+            position: relative !important;
+            top: auto !important;
+            z-index: 2;
+        }
+
+        #frame-container {
+            position: relative !important;
+        }
+
+        .slashapp {
+            flex: 1;
+            overflow: visible !important;
+            min-width: 0;
+        }
+
+        .slashapp_ {
+            width: 100% !important;
+            min-width: 0 !important;
+            max-width: none !important;
+            border-radius: 20px !important;
+        }
+
+        .top-spot-enclosure > a,
+        .top-spot-enclosure > button,
+        .top-spot-enclosure > ul,
+        .top-spot-enclosure > input,
+        .top-spot-enclosure > .dropdown {
+            flex-shrink: 0;
+        }
+
+        .browser-frame {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            border: 0;
+            display: none;
+        }
+
+        .browser-frame.active {
+            display: block;
+        }
+
+        #frame-container {
+            position: relative;
+            width: 100%;
+            flex: 1;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="tab-bar">
+        <button id="new-tab" onclick="createTab()">+</button>
+    </div>
+
+    <div class="top-spot">
+        <div class="top-spot-enclosure">
+
+            <div
+                class="slashapp"
+                autocomplete="off"
+                style="position: relative; border-radius: 10px;"
+            >
+                <form id="uv-form">
+                    <input
+                        placeholder="type as you must"
+                        id="uv-address"
+                        style="max-height: 10px; padding: 10px; letter-spacing: 1px;"
+                        class="slashapp_"
+                        type="text"
+                    >
+                </form>
+
+                <div id="suggestions-box"></div>
+            </div>
+
+            <a onclick="fsFram()">
+                <div class="buttin">
+                    <img
+                        id="svgg"
+                        style="margin-top: 4px;"
+                        src="/data/images/svg/fullscreen.svg"
+                    >
+                </div>
+            </a>
+
+            <a onclick="openCurrentTab()">
+                <div class="buttin">
+                    <img
+                        style="margin-top: 4px;"
+                        src="/data/images/svg/idk.png"
+                    >
+                </div>
+            </a>
+
+            <a onclick="consol()">
+                <div class="buttin">
+                    <img
+                        id="svgg"
+                        style="margin-top: 4px;"
+                        src="/data/images/svg/inspect.svg"
+                    >
+                </div>
+            </a>
+
+            <a onclick="window.location.href='/tabs.html'">
+                <div class="buttin">
+                    <img
+                        id="svg"
+                        style="margin-top: 4px;"
+                        src="/data/images/plus-5-xxl.png"
+                    >
+                </div>
+            </a>
+
+            <a onclick="toggleDropdown()">
+                <div class="buttin">
+                    <img
+                        style="margin-top: 4px;"
+                        src="./data/images/star.png"
+                    >
+                </div>
+            </a>
+
+            <button id="add-bookmark">+</button>
+
+            <input
+                type="text"
+                id="bookmark-name"
+                placeholder="Bookmark Name"
+            />
+
+            <ul id="bookmark-list"></ul>
+
+            <div class="dropdown">
+                <div
+                    class="dropdown-content"
+                    id="dropdownContent"
+                >
+                    <p>Dropdown Item 1</p>
+                    <p>Dropdown Item 2</p>
+                    <p>Dropdown Item 3</p>
+                </div>
+            </div>
+
+            <div id="search-history-container">
+                <h4>Search History</h4>
+
+                <ul id="search-history-list"></ul>
+
+                <button id="clear-history-btn">
+                    Clear History
+                </button>
+            </div>
+
+        </div>
+
+        <div class="buttin" id="toggleTopBar">
+            <img
+                src="/data/images/svg/collapse.svg"
+                style="width: 26px;"
+                id="toggleIcon"
+            >
+        </div>
+    </div>
+
+    <div id="frame-container"></div>
+
+    <script>
+        function toggleDropdown() {
+            const add = document.getElementById("add-bookmark");
+            const name = document.getElementById("bookmark-name");
+
+            if (add.style.display === "inline-block") {
+                add.style.display = "none";
+            } else {
+                add.style.display = "inline-block";
+            }
+
+            if (name.style.display === "inline-block") {
+                name.style.display = "none";
+            } else {
+                name.style.display = "inline-block";
+            }
+        }
+    </script>
+
+    <script>
+        function toggleTopBar() {
+            const topSpot = document.querySelector('.top-spot');
+            const toggleIcon = document.getElementById('toggleIcon');
+
+            const currentDisplay =
+                topSpot.style.display;
+
+            if (currentDisplay === 'none') {
+                topSpot.style.display = '';
+                toggleIcon.src =
+                    '/data/images/svg/collapse.svg';
+            } else {
+                topSpot.style.display = 'none';
+                toggleIcon.src =
+                    '/data/images/svg/expand.svg';
+            }
+        }
+
+        document
+            .getElementById('toggleTopBar')
+            .addEventListener('click', toggleTopBar);
+    </script>
+
+    <script>
+        let tabs = [];
+        let activeTabId = null;
+        let tabCounter = 0;
+
+        const frameContainer =
+            document.getElementById("frame-container");
+
+        const tabBar =
+            document.getElementById("tab-bar");
+
+        function createTab(url = "/") {
+
+            const id = ++tabCounter;
+
+            const tab = {
+                id,
+                title: "New Tab",
+                url
+            };
+
+            tabs.push(tab);
+
+            const frame = document.createElement("iframe");
+
+            frame.className = "browser-frame";
+            frame.id = `frame-${id}`;
+
+            frame.src = url;
+
+            frame.onload = () => {
+                try {
+                    const frameDocument =
+                        frame.contentDocument;
+
+                    if (frameDocument &&
+                        frameDocument.title) {
+
+                        tab.title =
+                            frameDocument.title;
+
+                        updateTabTitle(id);
+                    }
+                } catch {}
+            };
+
+            frameContainer.appendChild(frame);
+
+            activeTabId = id;
+
+            renderTabs();
+            switchTab(id);
+        }
+
+
+        function switchTab(id) {
+
+            activeTabId = id;
+
+            document
+                .querySelectorAll(".browser-frame")
+                .forEach(frame => {
+
+                    frame.classList.toggle(
+                        "active",
+                        frame.id === `frame-${id}`
+                    );
+                });
+
+            document
+                .querySelectorAll(".browser-tab")
+                .forEach(tab => {
+
+                    tab.classList.toggle(
+                        "active",
+                        Number(tab.dataset.id) === id
+                    );
+                });
+
+            updateAddressBar();
+        }
+
+
+        function closeTab(id) {
+
+            const index =
+                tabs.findIndex(tab => tab.id === id);
+
+            if (index === -1) return;
+
+            const frame =
+                document.getElementById(`frame-${id}`);
+
+            if (frame) {
+                frame.remove();
+            }
+
+            tabs.splice(index, 1);
+
+            if (tabs.length === 0) {
+                createTab();
+                return;
+            }
+
+            if (activeTabId === id) {
+
+                const newIndex =
+                    Math.max(0, index - 1);
+
+                switchTab(
+                    tabs[newIndex].id
+                );
+            }
+
+            renderTabs();
+        }
+
+
+        function renderTabs() {
+
+            document
+                .querySelectorAll(".browser-tab")
+                .forEach(tab => tab.remove());
+
+            const newTabButton =
+                document.getElementById("new-tab");
+
+            tabs.forEach(tab => {
+
+                const element =
+                    document.createElement("div");
+
+                element.className =
+                    "browser-tab";
+
+                element.dataset.id =
+                    tab.id;
+
+                if (tab.id === activeTabId) {
+                    element.classList.add("active");
+                }
+
+                const favicon =
+                    document.createElement("span");
+
+                favicon.className =
+                    "browser-tab-favicon";
+
+                const title =
+                    document.createElement("span");
+
+                title.className =
+                    "browser-tab-title";
+
+                title.textContent =
+                    tab.title;
+
+                const close =
+                    document.createElement("button");
+
+                close.className =
+                    "browser-tab-close";
+
+                close.textContent = "×";
+
+                close.onclick = event => {
+                    event.stopPropagation();
+                    closeTab(tab.id);
+                };
+
+                element.appendChild(favicon);
+                element.appendChild(title);
+                element.appendChild(close);
+
+                element.onclick = () => {
+                    switchTab(tab.id);
+                };
+
+                tabBar.insertBefore(
+                    element,
+                    newTabButton
+                );
+            });
+        }
+
+
+        function updateTabTitle(id) {
+
+            const tab =
+                tabs.find(tab => tab.id === id);
+
+            if (!tab) return;
+
+            const element =
+                document.querySelector(
+                    `.browser-tab[data-id="${id}"]`
+                );
+
+            if (!element) return;
+
+            const title =
+                element.querySelector(
+                    ".browser-tab-title"
+                );
+
+            title.textContent =
+                tab.title;
+        }
+
+
+        function getCurrentFrame() {
+
+            if (activeTabId === null) {
+                return null;
+            }
+
+            return document.getElementById(
+                `frame-${activeTabId}`
+            );
+        }
+
+
+        function getCurrentTab() {
+
+            return tabs.find(
+                tab => tab.id === activeTabId
+            );
+        }
+
+
+        function updateAddressBar() {
+
+            const tab =
+                getCurrentTab();
+
+            if (!tab) return;
+
+            const input =
+                document.getElementById(
+                    "uv-address"
+                );
+
+            if (tab.url !== "/") {
+                input.value = tab.url;
+            } else {
+                input.value = "";
+            }
+        }
+
+
+        function openCurrentTab() {
+
+            const frame =
+                getCurrentFrame();
+
+            if (!frame) return;
+
+            window.open(
+                frame.src,
+                "_blank"
+            );
+        }
+
+
+        // Start with one tab
+        createTab();
+    </script>
+
+
+    <!-- SEARCH -->
+
+    <script>
+        document
+            .getElementById('uv-form')
+            .addEventListener('submit', function(event) {
+
+                event.preventDefault();
+
+                const urlInput =
+                    document.getElementById('uv-address');
+
+                let input =
+                    urlInput.value.trim();
+
+                if (!input) return;
+
+                let url;
+
+                if (
+                    input.startsWith('http://') ||
+                    input.startsWith('https://') ||
+                    (
+                        input.includes('.') &&
+                        !input.includes(' ')
+                    )
+                ) {
+
+                    url =
+                        input.startsWith('http')
+                            ? input
+                            : 'https://' + input;
+
+                } else {
+
+                    url =
+                        'https://www.google.com/search?q=' +
+                        encodeURIComponent(input);
+                }
+
+                let tab =
+                    getCurrentTab();
+
+                if (!tab) {
+                    createTab();
+                    tab = getCurrentTab();
+                }
+
+                const iframe =
+                    getCurrentFrame();
+
+                const proxied =
+                    __uv$config.prefix +
+                    __uv$config.encodeUrl(url);
+
+                iframe.src = proxied;
+
+                tab.url = url;
+                tab.title = input;
+
+                urlInput.value =
+                    'Loading..';
+
+                updateTabTitle(tab.id);
+
+                iframe.onload = function() {
+
+                    try {
+
+                        const title =
+                            iframe.contentDocument?.title;
+
+                        if (title) {
+                            tab.title = title;
+                            updateTabTitle(tab.id);
+                        }
+
+                    } catch {}
+
+                    urlInput.value = url;
+                };
+            });
+    </script>
+
+
+    <!-- BOOKMARKS -->
+
+    <script>
+
+        const bookmarkList =
+            document.getElementById(
+                'bookmark-list'
+            );
+
+        const addBookmarkButton =
+            document.getElementById(
+                'add-bookmark'
+            );
+
+        const bookmarkNameInput =
+            document.getElementById(
+                'bookmark-name'
+            );
+
+
+        function loadBookmarks() {
+
+            const bookmarks =
+                JSON.parse(
+                    localStorage.getItem(
+                        'bookmarks'
+                    )
+                ) || [];
+
+            bookmarks.forEach(bookmark => {
+
+                addBookmarkToList(
+                    bookmark.name,
+                    bookmark.url
+                );
+            });
+        }
+
+
+        function addBookmarkToList(name, url) {
+
+            const listItem =
+                document.createElement('li');
+
+            listItem.textContent =
+                name;
+
+            const removeButton =
+                document.createElement('button');
+
+            removeButton.textContent =
+                '×';
+
+            removeButton.onclick =
+                event => {
+
+                    event.stopPropagation();
+
+                    removeBookmark(
+                        name,
+                        url
+                    );
+
+                    listItem.remove();
+                };
+
+            listItem.appendChild(
+                removeButton
+            );
+
+            listItem.onclick = () => {
+
+                document.getElementById(
+                    'uv-address'
+                ).value = url;
+
+                document
+                    .getElementById('uv-form')
+                    .dispatchEvent(
+                        new Event('submit')
+                    );
+            };
+
+            bookmarkList.appendChild(
+                listItem
+            );
+        }
+
+
+        function removeBookmark(name, url) {
+
+            const bookmarks =
+                JSON.parse(
+                    localStorage.getItem(
+                        'bookmarks'
+                    )
+                ) || [];
+
+            const updatedBookmarks =
+                bookmarks.filter(
+                    bookmark =>
+                        !(
+                            bookmark.name === name &&
+                            bookmark.url === url
+                        )
+                );
+
+            localStorage.setItem(
+                'bookmarks',
+                JSON.stringify(updatedBookmarks)
+            );
+        }
+
+
+        addBookmarkButton.addEventListener(
+            'click',
+            () => {
+
+                const name =
+                    bookmarkNameInput.value.trim();
+
+                const url =
+                    document.getElementById(
+                        'uv-address'
+                    ).value.trim();
+
+                if (name && url) {
+
+                    const bookmarks =
+                        JSON.parse(
+                            localStorage.getItem(
+                                'bookmarks'
+                            )
+                        ) || [];
+
+                    bookmarks.push({
+                        name,
+                        url
+                    });
+
+                    localStorage.setItem(
+                        'bookmarks',
+                        JSON.stringify(bookmarks)
+                    );
+
+                    addBookmarkToList(
+                        name,
+                        url
+                    );
+
+                    bookmarkNameInput.value = '';
+
+                } else {
+
+                    alert(
+                        'Please enter a name and ensure the URL is set.'
+                    );
+                }
+            }
+        );
+
+
+        loadBookmarks();
+
+    </script>
+
+
+    <!-- SEARCH HISTORY / SUGGESTIONS -->
+
+    <script>
+
+        (function () {
+
+            const POPULAR_SEARCHES = [
+                'youtube',
+                'google',
+                'discord',
+                'netflix',
+                'spotify',
+                'reddit',
+                'twitch',
+                'tiktok',
+                'instagram',
+                'chatgpt',
+                'roblox',
+                'wikipedia',
+                'amazon',
+                'gmail',
+                'twitter',
+                'google maps',
+                'weather',
+                'translate',
+                'news',
+                'unblocked games',
+                'steam'
+            ];
+
+            const HISTORY_KEY =
+                'isola_recent_searches';
+
+            const MAX_SUGGESTIONS = 6;
+
+
+            function getHistory() {
+
+                try {
+
+                    return JSON.parse(
+                        localStorage.getItem(
+                            HISTORY_KEY
+                        )
+                    ) || [];
+
+                } catch {
+
+                    return [];
+                }
+            }
+
+
+            function saveToHistory(term) {
+
+                const history =
+                    getHistory().filter(
+                        item =>
+                            item.toLowerCase() !==
+                            term.toLowerCase()
+                    );
+
+                history.unshift(term);
+
+                localStorage.setItem(
+                    HISTORY_KEY,
+                    JSON.stringify(
+                        history.slice(0, 20)
+                    )
+                );
+            }
+
+
+            function buildSuggestions(query) {
+
+                const q =
+                    query.toLowerCase();
+
+                const history =
+                    getHistory();
+
+
+                const historyMatches =
+                    history
+                        .filter(
+                            item =>
+                                item
+                                    .toLowerCase()
+                                    .includes(q)
+                        )
+                        .map(
+                            item => ({
+                                phrase: item,
+                                type: 'recent'
+                            })
+                        );
+
+
+                const popularMatches =
+                    POPULAR_SEARCHES
+                        .filter(
+                            item =>
+                                item
+                                    .toLowerCase()
+                                    .includes(q)
+                        )
+                        .filter(
+                            item =>
+                                !historyMatches.some(
+                                    h =>
+                                        h.phrase
+                                            .toLowerCase() ===
+                                        item.toLowerCase()
+                                )
+                        )
+                        .map(
+                            item => ({
+                                phrase: item,
+                                type: 'popular'
+                            })
+                        );
+
+
+                return [
+                    ...historyMatches,
+                    ...popularMatches
+                ].slice(
+                    0,
+                    MAX_SUGGESTIONS
+                );
+            }
+
+
+            document.addEventListener(
+                'DOMContentLoaded',
+                () => {
+
+                    const searchBox =
+                        document.getElementById(
+                            'uv-address'
+                        );
+
+                    const suggestionsBox =
+                        document.getElementById(
+                            'suggestions-box'
+                        );
+
+                    let activeIndex = -1;
+
+
+                    function render(
+                        suggestions
+                    ) {
+
+                        suggestionsBox.innerHTML = '';
+
+                        activeIndex = -1;
+
+
+                        if (
+                            suggestions.length === 0
+                        ) {
+
+                            suggestionsBox.style.display =
+                                'none';
+
+                            return;
+                        }
+
+
+                        suggestions.forEach(
+                            suggestion => {
+
+                                const item =
+                                    document.createElement(
+                                        'div'
+                                    );
+
+                                item.classList.add(
+                                    'suggestion-item'
+                                );
+
+
+                                const icon =
+                                    document.createElement(
+                                        'span'
+                                    );
+
+                                icon.classList.add(
+                                    'suggestion-icon'
+                                );
+
+                                icon.textContent =
+                                    suggestion.type === 'recent'
+                                        ? '⟲'
+                                        : '↗';
+
+
+                                const label =
+                                    document.createElement(
+                                        'span'
+                                    );
+
+                                label.textContent =
+                                    suggestion.phrase;
+
+
+                                item.appendChild(icon);
+                                item.appendChild(label);
+
+
+                                item.addEventListener(
+                                    'mousedown',
+                                    event => {
+
+                                        event.preventDefault();
+
+                                        searchBox.value =
+                                            suggestion.phrase;
+
+                                        suggestionsBox.style.display =
+                                            'none';
+
+                                        document
+                                            .getElementById(
+                                                'uv-form'
+                                            )
+                                            .dispatchEvent(
+                                                new Event(
+                                                    'submit'
+                                                )
+                                            );
+                                    }
+                                );
+
+
+                                suggestionsBox.appendChild(
+                                    item
+                                );
+                            }
+                        );
+
+
+                        suggestionsBox.style.display =
+                            'block';
+                    }
+
+
+                    searchBox.addEventListener(
+                        'input',
+                        () => {
+
+                            const query =
+                                searchBox.value.trim();
+
+                            render(
+                                buildSuggestions(
+                                    query
+                                )
+                            );
+                        }
+                    );
+
+
+                    searchBox.addEventListener(
+                        'focus',
+                        () => {
+
+                            if (
+                                searchBox.value
+                                    .trim()
+                                    .length === 0
+                            ) {
+
+                                render(
+                                    getHistory()
+                                        .slice(
+                                            0,
+                                            MAX_SUGGESTIONS
+                                        )
+                                        .map(
+                                            item => ({
+                                                phrase: item,
+                                                type: 'recent'
+                                            })
+                                        )
+                                );
+                            }
+                        }
+                    );
+
+
+                    searchBox.addEventListener(
+                        'keydown',
+                        event => {
+
+                            const items =
+                                suggestionsBox.querySelectorAll(
+                                    '.suggestion-item'
+                                );
+
+                            if (
+                                !items.length ||
+                                (
+                                    event.key !==
+                                    'ArrowDown' &&
+                                    event.key !==
+                                    'ArrowUp'
+                                )
+                            ) {
+                                return;
+                            }
+
+                            event.preventDefault();
+
+                            items.forEach(
+                                item =>
+                                    item.classList.remove(
+                                        'active'
+                                    )
+                            );
+
+
+                            activeIndex =
+                                event.key === 'ArrowDown'
+                                    ? (
+                                        activeIndex + 1
+                                    ) % items.length
+                                    : (
+                                        activeIndex -
+                                        1 +
+                                        items.length
+                                    ) % items.length;
+
+
+                            items[
+                                activeIndex
+                            ].classList.add(
+                                'active'
+                            );
+
+
+                            searchBox.value =
+                                items[
+                                    activeIndex
+                                ].textContent;
+                        }
+                    );
+
+
+                    document.addEventListener(
+                        'click',
+                        event => {
+
+                            if (
+                                !suggestionsBox.contains(
+                                    event.target
+                                ) &&
+                                event.target !==
+                                    searchBox
+                            ) {
+
+                                suggestionsBox.style.display =
+                                    'none';
+                            }
+                        }
+                    );
+
+
+                    document.addEventListener(
+                        'submit',
+                        event => {
+
+                            if (
+                                event.target &&
+                                event.target.id ===
+                                    'uv-form'
+                            ) {
+
+                                const term =
+                                    searchBox.value.trim();
+
+                                if (
+                                    term &&
+                                    term !==
+                                        'Loading..'
+                                ) {
+
+                                    saveToHistory(
+                                        term
+                                    );
+                                }
+
+                                suggestionsBox.style.display =
+                                    'none';
+                            }
+
+                        },
+                        true
+                    );
+
+                }
+            );
+
+        })();
+
+    </script>
+
+
+    <!-- GOOGLE ANALYTICS -->
+
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-79VER3NKGP"></script>
+
+    <!--<script>
+        window.dataLayer =
+            window.dataLayer || [];
+
+        function gtag() {
+            dataLayer.push(arguments);
+        }
+
+        gtag(
+            'js',
+            new Date()
+        );
+
+        gtag(
+            'config',
+            'G-79VER3NKGP'
+        );
+    </script>-->
+
+</body>
+</html>
