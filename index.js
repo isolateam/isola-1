@@ -64,6 +64,10 @@ app.get("/baremux/worker.js", (req, res) => {
 app.use("/uv/", express.static(uvPath));
 app.use("/epoxy/", express.static(epoxyPath));
 
+app.get("/check-domain", (req, res) => {
+    res.sendStatus(200);
+});
+
 app.get("/go=:query", async (req, res) => {
     try {
         const reply = await fetch(
