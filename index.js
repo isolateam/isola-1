@@ -3,23 +3,28 @@ import http from "http";
 import compression from "compression";
 import "dotenv/config";
 import path from "node:path";
-
-import { uvPath } from "@titaniumnetwork-dev/ultraviolet";
-import { baremuxPath } from "@mercuryworkshop/bare-mux/node";
-import { epoxyPath } from "@mercuryworkshop/epoxy-transport";
-import { createBareServer } from "@tomphttp/bare-server-node";
 import { server as wisp } from "@mercuryworkshop/wisp-js/server";
 
-let port = parseInt(process.env.PORT || "");
-if (isNaN(port)) port = 2100;
+const port = parseInt(process.env.PORT || "2100");
 
 const app = express();
-const bare = createBareServer("/bare/");
 const __dirname = process.cwd();
 const publicPath = path.join(__dirname, "public");
 
+const scramjetPath = path.join(process.cwd(), "node_modules/@mercuryworkshop/scramjet/dist");
+const controllerPath = path.join(process.cwd(), "node_modules/@mercuryworkshop/scramjet-controller/dist");
+const utilsPath = path.join(process.cwd(), "node_modules/@mercuryworkshop/scramjet-utils/dist");
+const epoxyPath = path.join(process.cwd(), "node_modules/@mercuryworkshop/epoxy-transport/dist");
+
 app.use(compression());
 app.use(express.json());
+
+app.use("/scram", express.static(scramjetPath));
+app.use("/controller", express.static(controllerPath));
+app.use("/utils", express.static(utilsPath));
+app.use("/epoxy", express.static(epoxyPath));
+
+app.use(express.static(publicPath));
 
 app.get("/", (req, res) => {
     res.sendFile(path.join(publicPath, "index.html"));
@@ -28,41 +33,6 @@ app.get("/", (req, res) => {
 app.get("/null", (req, res) => {
     res.sendFile(path.join(publicPath, "start.html"));
 });
-
-app.get("/uv/uv.bundle.js", (req, res) => {
-    res.sendFile(path.join(uvPath, "uv.bundle.js"));
-});
-
-app.get("/uv/uv.client.js", (req, res) => {
-    res.sendFile(path.join(uvPath, "uv.client.js"));
-});
-
-app.get("/uv/uv.handler.js", (req, res) => {
-    res.sendFile(path.join(uvPath, "uv.handler.js"));
-});
-
-app.get("/uv/uv.sw.js", (req, res) => {
-    res.sendFile(path.join(uvPath, "uv.sw.js"));
-});
-
-app.get("/uv/uv.config.js", (req, res) => {
-    res.sendFile(path.join(publicPath, "uv", "uv.config.js"));
-});
-
-app.get("/uv/sw.js", (req, res) => {
-    res.setHeader("Service-Worker-Allowed", "/");
-    res.sendFile(path.join(publicPath, "uv", "sw.js"));
-});
-app.use(express.static(publicPath));
-app.get("/baremux/index.js", (req, res) => {
-    res.sendFile(path.join(baremuxPath, "index.js"));
-});
-
-app.get("/baremux/worker.js", (req, res) => {
-    res.sendFile(path.join(baremuxPath, "worker.js"));
-});
-app.use("/uv/", express.static(uvPath));
-app.use("/epoxy/", express.static(epoxyPath));
 
 app.get("/check-domain", (req, res) => {
     res.sendStatus(200);
@@ -81,39 +51,23 @@ app.get("/go=:query", async (req, res) => {
     }
 });
 
-app.use((req, res, next) => {
-    if (req.url.startsWith("/uv/service/")) {
-        console.log("UV:", req.method, req.url);
-    }
-    next();
-});
 app.use((req, res) => {
     res.status(404).send("404");
 });
 
-const server = http.createServer((req, res) => {
-    if (bare.shouldRoute(req)) {
-        bare.routeRequest(req, res);
-        return;
-    }
-
-    app(req, res);
-});
+const server = http.createServer(app);
 
 server.on("upgrade", (req, socket, head) => {
-    if (req.url?.startsWith("/wisp/")) {
-        wisp.routeRequest(req, socket, head);
-        return;
-    }
+    const url = new URL(req.url || "/", "http://localhost");
 
-    if (bare.shouldRoute(req)) {
-        bare.routeUpgrade(req, socket, head);
+    if (url.pathname === "/wisp/") {
+        req.url = url.pathname;
+        wisp.routeRequest(req, socket, head);
         return;
     }
 
     socket.end();
 });
-
 server.on("listening", () => {
     console.log(`Server running on http://localhost:${port}`);
     console.log(`Wisp running on ws://localhost:${port}/wisp/`);
@@ -125,8 +79,9 @@ function shutdown() {
     process.exit(0);
 }
 
-console.log("uvPath:", uvPath);
-console.log("baremuxPath:", baremuxPath);
+console.log("scramjetPath:", scramjetPath);
+console.log("controllerPath:", controllerPath);
+console.log("utilsPath:", utilsPath);
 console.log("epoxyPath:", epoxyPath);
 
 process.on("SIGINT", shutdown);

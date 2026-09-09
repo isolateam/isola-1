@@ -10,33 +10,56 @@
     <link rel="stylesheet" href="./data/css/q.css">
 
     <title>its isola, its free</title>
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7747312702427154"
-        crossorigin="anonymous"></script>
-    <!-- UV -->
-    <script src="/uv/uv.bundle.js"></script>
-    <script src="/uv/uv.config.js"></script>
-    <script src="/baremux/index.js"></script>
+
+    <script src="/scram/scramjet.js"></script>
+    <script src="/controller/controller.api.js"></script>
+    <script src="/utils/scramjet-utils.js"></script>
 
     <script>
-    const bareMuxConnection = new BareMux.BareMuxConnection("/baremux/worker.js");
+        let controller;
+        let scramjetReady;
 
-    async function setupProxy() {
-        await bareMuxConnection.setTransport("/epoxy/index.mjs", [{
-            wisp: `${location.protocol === "https:" ? "wss:" : "ws:"}//${location.host}/wisp/`
-        }]);
+        async function initScramjet() {
+            const registration = await navigator.serviceWorker.register("/sw.js", {
+                scope: "/"
+            });
 
-        const registration = await navigator.serviceWorker.register("/uv/sw.js", {
-            scope: "/"
-        });
+            if (!navigator.serviceWorker.controller) {
+                await new Promise(resolve => {
+                    navigator.serviceWorker.addEventListener("controllerchange", resolve, { once: true });
+                });
+            }
 
-        await navigator.serviceWorker.ready;
-        console.log("Proxy ready");
-    }
+            const serviceworker = navigator.serviceWorker.controller || registration.active;
 
-    setupProxy().catch(console.error);
+            const wispUrl =
+                `${location.protocol === "https:" ? "wss:" : "ws:"}//${location.host}/wisp/`;
+
+            const { default: EpoxyClient } = await import("/epoxy/index.mjs");
+            const transport = new EpoxyClient({ wisp: wispUrl });
+
+            controller = new $scramjetController.Controller({
+                serviceworker,
+                transport,
+                config: {
+                    prefix: "/~/sj/",
+                    scramjetPath: "/scram/scramjet.js",
+                    wasmPath: "/scram/scramjet.wasm",
+                    injectPath: "/controller/controller.inject.js"
+                }
+            });
+
+            await controller.wait();
+        }
+
+        scramjetReady = initScramjet().catch(console.error);
     </script>
 
     <style>
+        /* ---------------------------------------------- */
+        /* PAGE LAYOUT - stack tab bar, search bar, frame  */
+        /* ---------------------------------------------- */
+
         html, body {
             height: 100%;
             margin: 0;
@@ -47,6 +70,10 @@
             flex-direction: column;
             background: #1b1c1f;
         }
+
+        /* ---------------------------------------------- */
+        /* TAB BAR                                         */
+        /* ---------------------------------------------- */
 
         #tab-bar {
             width: 100%;
@@ -173,6 +200,14 @@
             color: #fff;
         }
 
+        /* ---------------------------------------------- */
+        /* SEARCH / ADDRESS BAR - sits directly under tabs */
+        /* ---------------------------------------------- */
+
+        /* Force the search row out of whatever fixed/absolute
+           positioning q.css gives it, so it sits in normal
+           document flow right under the tab bar instead of
+           floating on top of it. */
         .top-spot {
             position: static !important;
             top: auto !important;
@@ -207,6 +242,8 @@
             overflow: visible !important;
         }
 
+        /* #tab-bar must also stay in normal flow, above the
+           search row, so nothing renders behind/under it. */
         #tab-bar {
             position: relative !important;
             top: auto !important;
@@ -230,6 +267,8 @@
             border-radius: 20px !important;
         }
 
+        /* the toolbar icon buttons (fullscreen, inspect, etc.) and
+           bookmark bits shouldn't grow/shrink, only the search box */
         .top-spot-enclosure > a,
         .top-spot-enclosure > button,
         .top-spot-enclosure > ul,
@@ -237,6 +276,10 @@
         .top-spot-enclosure > .dropdown {
             flex-shrink: 0;
         }
+
+        /* ---------------------------------------------- */
+        /* FRAMES                                          */
+        /* ---------------------------------------------- */
 
         .browser-frame {
             position: absolute;
@@ -261,9 +304,14 @@
 </head>
 
 <body>
+
+    <!-- TABS -->
+
     <div id="tab-bar">
         <button id="new-tab" onclick="createTab()">+</button>
     </div>
+
+    <!-- TOP BAR (search bar, now directly under the tab bar) -->
 
     <div class="top-spot">
         <div class="top-spot-enclosure">
@@ -376,7 +424,13 @@
         </div>
     </div>
 
+
+    <!-- BROWSER FRAMES -->
+
     <div id="frame-container"></div>
+
+
+    <!-- DROPDOWN -->
 
     <script>
         function toggleDropdown() {
@@ -396,6 +450,9 @@
             }
         }
     </script>
+
+
+    <!-- TOP BAR -->
 
     <script>
         function toggleTopBar() {
@@ -421,6 +478,9 @@
             .addEventListener('click', toggleTopBar);
     </script>
 
+
+    <!-- TABS -->
+
     <script>
         let tabs = [];
         let activeTabId = null;
@@ -432,45 +492,33 @@
         const tabBar =
             document.getElementById("tab-bar");
 
-        function createTab(url = "/") {
+        async function createTab(url = null) {
+            await scramjetReady;
 
             const id = ++tabCounter;
 
             const tab = {
                 id,
                 title: "New Tab",
-                url
+                url: url || ""
             };
 
             tabs.push(tab);
 
             const frame = document.createElement("iframe");
-
             frame.className = "browser-frame";
             frame.id = `frame-${id}`;
 
-            frame.src = url;
-
-            frame.onload = () => {
-                try {
-                    const frameDocument =
-                        frame.contentDocument;
-
-                    if (frameDocument &&
-                        frameDocument.title) {
-
-                        tab.title =
-                            frameDocument.title;
-
-                        updateTabTitle(id);
-                    }
-                } catch {}
-            };
-
             frameContainer.appendChild(frame);
 
-            activeTabId = id;
+            const sjFrame = controller.createFrame(frame);
+            tab.frame = sjFrame;
 
+            if (url) {
+                sjFrame.go(url);
+            }
+
+            activeTabId = id;
             renderTabs();
             switchTab(id);
         }
@@ -672,16 +720,9 @@
 
 
         function openCurrentTab() {
-
-            const frame =
-                getCurrentFrame();
-
-            if (!frame) return;
-
-            window.open(
-                frame.src,
-                "_blank"
-            );
+            const tab = getCurrentTab();
+            if (!tab) return;
+            window.open(tab.url, "_blank");
         }
 
 
@@ -726,7 +767,7 @@
                 } else {
 
                     url =
-                        'https://www.duckduckgo.com/?q=' +
+                        'https://www.google.com/search?q=' +
                         encodeURIComponent(input);
                 }
 
@@ -740,12 +781,8 @@
 
                 const iframe =
                     getCurrentFrame();
-
-                const proxied =
-                    __uv$config.prefix +
-                    __uv$config.encodeUrl(url);
-
-                iframe.src = proxied;
+                
+                tab.frame.go(url);
 
                 tab.url = url;
                 tab.title = input;

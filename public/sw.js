@@ -1,9 +1,11 @@
-importScripts("/uv/uv.bundle.js");
-importScripts("/uv/uv.config.js");
-importScripts("/uv/uv.sw.js");
+importScripts("/controller/controller.sw.js");
 
-const sw = new UVServiceWorker();
+self.addEventListener("activate", event => {
+    event.waitUntil(clients.claim());
+});
 
-self.addEventListener("fetch", (event) => {
-    event.respondWith(sw.fetch(event));
+self.addEventListener("fetch", event => {
+    if ($scramjetController.shouldRoute(event)) {
+        event.respondWith($scramjetController.route(event));
+    }
 });
